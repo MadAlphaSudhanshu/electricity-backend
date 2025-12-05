@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import sqlite3
+import os
 
 app = Flask(__name__)
 
-DB_FILE = "bills.db"
+# Use a safe DB location for Render (optional but recommended)
+DB_FILE = os.path.join("/tmp", "bills.db")
 
 
 # ------------------------- Database Setup --------------------------
@@ -29,10 +31,10 @@ def init_db():
 init_db()
 
 
-# ----------------------------- UI Page ------------------------------
-@app.route("/", methods=["GET"])
+# ----------------------------- ROOT ENDPOINT ------------------------------
+@app.route("/", methods=["GET", "HEAD"])
 def home_page():
-    return render_template("index.html")
+    return jsonify({"message": "Backend running successfully 🚀"}), 200
 
 
 # ------------------------ Manual Save API ----------------------------
@@ -61,7 +63,7 @@ def manual_save():
 
     savings = round(total_amount * 0.03, 2)
 
-    # Save in Database
+    # Save into SQLite DB
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
     cur.execute("""
@@ -94,7 +96,6 @@ def download_data():
 
     cur.execute("SELECT * FROM bill_records")
     rows = cur.fetchall()
-
     conn.close()
 
     if not rows:
@@ -118,4 +119,4 @@ def download_data():
 
 # ------------------------------ Run App -----------------------------
 if __name__ == "__main__":
-    app.run
+    app.run()
